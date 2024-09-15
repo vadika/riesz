@@ -15,13 +15,17 @@ def riesz_transform(image):
     rows, cols = image.shape
     x = np.arange(cols) / cols - 0.5
     y = np.arange(rows) / rows - 0.5
-    x, y = np.meshgrid(x, y)
-    r = np.sqrt(x ** 2 + y ** 2)
-
-    fx = -1j * x / (r + np.finfo(float).eps)
-    fy = -1j * y / (r + np.finfo(float).eps)
-
-    fx[0, 0] = fy[0, 0] = 0
+    
+    r = np.zeros((rows, cols))
+    fx = np.zeros((rows, cols), dtype=np.complex128)
+    fy = np.zeros((rows, cols), dtype=np.complex128)
+    
+    for i in range(rows):
+        for j in range(cols):
+            r[i, j] = np.sqrt(x[j]**2 + y[i]**2)
+            if r[i, j] != 0:
+                fx[i, j] = -1j * x[j] / r[i, j]
+                fy[i, j] = -1j * y[i] / r[i, j]
 
     img_fft = np.fft.fft2(image)
     rx = np.real(np.fft.ifft2(img_fft * fx))
