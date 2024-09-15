@@ -1,60 +1,43 @@
 import numpy as np
-import cupy as cp
 from scipy import signal
 import cv2
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from multiprocessing import Pool, cpu_count
 
-def use_gpu():
-    return cp.cuda.is_available()
-
-xp = cp if use_gpu() else np
+xp = np
 
 
 def riesz_transform(image):
     """Apply the Riesz transform to an image."""
-    if use_gpu():
-        image = cp.asarray(image)
-    
     rows, cols = image.shape
-    x, y = xp.meshgrid(xp.arange(cols) / cols - 0.5,
-                       xp.arange(rows) / rows - 0.5)
-    r = xp.sqrt(x ** 2 + y ** 2)
+    x, y = np.meshgrid(np.arange(cols) / cols - 0.5,
+                       np.arange(rows) / rows - 0.5)
+    r = np.sqrt(x ** 2 + y ** 2)
 
-    fx = -1j * x / (r + xp.finfo(float).eps)
-    fy = -1j * y / (r + xp.finfo(float).eps)
+    fx = -1j * x / (r + np.finfo(float).eps)
+    fy = -1j * y / (r + np.finfo(float).eps)
 
     fx[0, 0] = fy[0, 0] = 0
 
-    img_fft = xp.fft.fft2(image)
-    rx = xp.real(xp.fft.ifft2(img_fft * fx))
-    ry = xp.real(xp.fft.ifft2(img_fft * fy))
-
-    if use_gpu():
-        rx = cp.asnumpy(rx)
-        ry = cp.asnumpy(ry)
+    img_fft = np.fft.fft2(image)
+    rx = np.real(np.fft.ifft2(img_fft * fx))
+    ry = np.real(np.fft.ifft2(img_fft * fy))
 
     return rx, ry
 
 
 def gaussian_pyramid(image, levels):
     """Create a Gaussian pyramid."""
-    if use_gpu():
-        image = cp.asarray(image)
     pyramid = [image]
     for _ in range(levels - 1):
         image = signal.decimate(signal.decimate(image, 2, axis=0), 2, axis=1)
         pyramid.append(image)
-    if use_gpu():
-        pyramid = [cp.asnumpy(img) for img in pyramid]
     return pyramid
 
 
 def laplacian_pyramid(image, levels):
     """Create a Laplacian pyramid."""
-    if use_gpu():
-        image = cp.asarray(image)
     gaussian_pyr = gaussian_pyramid(image, levels)
     laplacian_pyr = []
 
@@ -65,8 +48,6 @@ def laplacian_pyramid(image, levels):
         laplacian_pyr.append(laplacian)
 
     laplacian_pyr.append(gaussian_pyr[-1])
-    if use_gpu():
-        laplacian_pyr = [cp.asnumpy(img) for img in laplacian_pyr]
     return laplacian_pyr
 
 
@@ -164,7 +145,6 @@ def main():
     levels = 7
 
     print(f"Loaded {len(frames)} frames from the video.")
-    print(f"Using GPU: {use_gpu()}")
 
     # Prepare arguments for parallel processing
     args = [(frame, i+1, levels) for i, frame in enumerate(frames)]
