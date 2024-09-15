@@ -1,6 +1,7 @@
 import numpy as np
 from scipy import signal
 import cv2
+import matplotlib.pyplot as plt
 
 
 def riesz_transform(image):
@@ -76,11 +77,40 @@ def load_frames_from_video(video_path, max_frames=None):
     return frames
 
 
+def visualize_riesz_pyramid(frame, riesz_pyr):
+    """Visualize the Riesz pyramid for a single frame."""
+    levels = len(riesz_pyr)
+    fig, axes = plt.subplots(levels, 3, figsize=(15, 5*levels))
+    
+    axes[0, 0].imshow(frame, cmap='gray')
+    axes[0, 0].set_title('Original Frame')
+    axes[0, 0].axis('off')
+    
+    for i, (rx, ry) in enumerate(riesz_pyr):
+        magnitude = np.sqrt(rx**2 + ry**2)
+        phase = np.arctan2(ry, rx)
+        
+        axes[i, 0].imshow(rx, cmap='gray')
+        axes[i, 0].set_title(f'Level {i}: Rx')
+        axes[i, 0].axis('off')
+        
+        axes[i, 1].imshow(ry, cmap='gray')
+        axes[i, 1].set_title(f'Level {i}: Ry')
+        axes[i, 1].axis('off')
+        
+        axes[i, 2].imshow(magnitude, cmap='viridis')
+        axes[i, 2].set_title(f'Level {i}: Magnitude')
+        axes[i, 2].axis('off')
+    
+    plt.tight_layout()
+    plt.show()
+
+
 # Example usage
 def main():
     # Load frames from a video file
     video_path = "path/to/your/video.mp4"  # Replace with your video file path
-    frames = load_frames_from_video(video_path, max_frames=10)  # Load up to 10 frames
+    frames = load_frames_from_video(video_path, max_frames=1)  # Load only 1 frame for demonstration
 
     # Set the number of levels for the pyramid
     levels = 4
@@ -95,7 +125,8 @@ def main():
         for j, (rx, ry) in enumerate(riesz_pyr):
             print(f"  Level {j}: Rx shape = {rx.shape}, Ry shape = {ry.shape}")
 
-        # Here you can add more processing or visualization of the Riesz pyramid if needed
+        # Visualize the Riesz pyramid
+        visualize_riesz_pyramid(frame, riesz_pyr)
 
 
 if __name__ == "__main__":
