@@ -96,19 +96,23 @@ def visualize_riesz_pyramid(frame, riesz_pyr, frame_number):
     for i, (rx, ry) in enumerate(riesz_pyr):
         magnitude = np.sqrt(rx**2 + ry**2)
         
-        fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+        fig, axes = plt.subplots(2, 2, figsize=(12, 12))
         
-        axes[0].imshow(rx, cmap='gray')
-        axes[0].set_title(f'Level {i+1}: Rx')
-        axes[0].axis('off')
+        axes[0, 0].imshow(frame, cmap='gray')
+        axes[0, 0].set_title('Original Frame')
+        axes[0, 0].axis('off')
         
-        axes[1].imshow(ry, cmap='gray')
-        axes[1].set_title(f'Level {i+1}: Ry')
-        axes[1].axis('off')
+        axes[0, 1].imshow(rx, cmap='gray')
+        axes[0, 1].set_title(f'Level {i+1}: Rx')
+        axes[0, 1].axis('off')
         
-        axes[2].imshow(magnitude, cmap='viridis')
-        axes[2].set_title(f'Level {i+1}: Magnitude')
-        axes[2].axis('off')
+        axes[1, 0].imshow(ry, cmap='gray')
+        axes[1, 0].set_title(f'Level {i+1}: Ry')
+        axes[1, 0].axis('off')
+        
+        axes[1, 1].imshow(magnitude, cmap='viridis')
+        axes[1, 1].set_title(f'Level {i+1}: Magnitude')
+        axes[1, 1].axis('off')
         
         plt.tight_layout()
         
