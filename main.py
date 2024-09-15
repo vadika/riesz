@@ -94,45 +94,48 @@ def visualize_riesz_pyramid(frame, riesz_pyr, frame_number):
     visualizations = []
     for i, (rx, ry) in enumerate(riesz_pyr):
         magnitude = np.sqrt(rx**2 + ry**2)
-        
+            
         # Normalize magnitude to [0, 1] range
         magnitude_normalized = (magnitude - magnitude.min()) / (magnitude.max() - magnitude.min())
-        
+            
+        # Resize magnitude_normalized to match frame size
+        magnitude_resized = cv2.resize(magnitude_normalized, (frame.shape[1], frame.shape[0]))
+            
         fig, axes = plt.subplots(2, 2, figsize=(12, 12))
-        
+            
         # Original frame
         axes[0, 0].imshow(frame, cmap='gray')
         axes[0, 0].set_title('Original Frame')
         axes[0, 0].axis('off')
-        
+            
         # Rx component
         axes[0, 1].imshow(rx, cmap='gray')
         axes[0, 1].set_title(f'Level {i+1}: Rx')
         axes[0, 1].axis('off')
-        
+            
         # Ry component
         axes[1, 0].imshow(ry, cmap='gray')
         axes[1, 0].set_title(f'Level {i+1}: Ry')
         axes[1, 0].axis('off')
-        
+            
         # Magnitude as alpha layer on original frame
         frame_rgb = np.stack((frame,)*3, axis=-1)
-        frame_rgba = np.dstack((frame_rgb, magnitude_normalized * 255)).astype(np.uint8)
+        frame_rgba = np.dstack((frame_rgb, magnitude_resized * 255)).astype(np.uint8)
         axes[1, 1].imshow(frame_rgba)
         axes[1, 1].set_title(f'Level {i+1}: Magnitude as Alpha')
         axes[1, 1].axis('off')
-        
+            
         plt.tight_layout()
-        
+            
         # Convert the figure to an image
         canvas = FigureCanvasAgg(fig)
         canvas.draw()
         img = np.frombuffer(canvas.tostring_rgb(), dtype='uint8')
         img = img.reshape(canvas.get_width_height()[::-1] + (3,))
-        
+            
         visualizations.append(img)
         plt.close(fig)
-    
+        
     return visualizations
 
 
