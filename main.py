@@ -89,37 +89,30 @@ def write_frames_to_video(frames, output_path, fps=30):
     out.release()
 
 
-def visualize_riesz_pyramid(frame, riesz_pyr):
-    """Visualize levels 4 to 7 of the Riesz pyramid for a single frame and return the figure."""
-    levels_to_show = riesz_pyr[3:7]  # Levels 4 to 7 (index 3 to 6)
-    fig, axes = plt.subplots(4, 3, figsize=(15, 20))
-    
-    for i, (rx, ry) in enumerate(levels_to_show):
+def visualize_riesz_pyramid(frame, riesz_pyr, frame_number):
+    """Visualize all levels of the Riesz pyramid for a single frame and save each level."""
+    for i, (rx, ry) in enumerate(riesz_pyr):
         magnitude = np.sqrt(rx**2 + ry**2)
-        level = i + 4  # Actual level number
         
-        axes[i, 0].imshow(rx, cmap='gray')
-        axes[i, 0].set_title(f'Level {level}: Rx')
-        axes[i, 0].axis('off')
+        fig, axes = plt.subplots(1, 3, figsize=(15, 5))
         
-        axes[i, 1].imshow(ry, cmap='gray')
-        axes[i, 1].set_title(f'Level {level}: Ry')
-        axes[i, 1].axis('off')
+        axes[0].imshow(rx, cmap='gray')
+        axes[0].set_title(f'Level {i+1}: Rx')
+        axes[0].axis('off')
         
-        axes[i, 2].imshow(magnitude, cmap='viridis')
-        axes[i, 2].set_title(f'Level {level}: Magnitude')
-        axes[i, 2].axis('off')
-    
-    plt.tight_layout()
-    
-    # Convert plot to image
-    canvas = FigureCanvasAgg(fig)
-    canvas.draw()
-    img = np.frombuffer(canvas.tostring_rgb(), dtype='uint8')
-    img = img.reshape(canvas.get_width_height()[::-1] + (3,))
-    
-    plt.close(fig)
-    return img
+        axes[1].imshow(ry, cmap='gray')
+        axes[1].set_title(f'Level {i+1}: Ry')
+        axes[1].axis('off')
+        
+        axes[2].imshow(magnitude, cmap='viridis')
+        axes[2].set_title(f'Level {i+1}: Magnitude')
+        axes[2].axis('off')
+        
+        plt.tight_layout()
+        
+        # Save the figure
+        plt.savefig(f'frame_{frame_number}_level_{i+1}.png')
+        plt.close(fig)
 
 
 def main():
@@ -132,23 +125,18 @@ def main():
 
     print(f"Loaded {len(frames)} frames from the video.")
 
-    output_frames = []
     for i, frame in enumerate(frames):
         # Compute the Riesz pyramid for each frame
         riesz_pyr = riesz_pyramid(frame, levels)
 
         print(f"Frame {i + 1}: Riesz pyramid created with {levels} levels.")
         for j, (rx, ry) in enumerate(riesz_pyr):
-            print(f"  Level {j}: Rx shape = {rx.shape}, Ry shape = {ry.shape}")
+            print(f"  Level {j + 1}: Rx shape = {rx.shape}, Ry shape = {ry.shape}")
 
-        # Visualize the Riesz pyramid and get the output frame
-        output_frame = visualize_riesz_pyramid(frame, riesz_pyr)
-        output_frames.append(output_frame)
+        # Visualize the Riesz pyramid and save each level
+        visualize_riesz_pyramid(frame, riesz_pyr, i + 1)
 
-    # Write the output frames to a video file
-    output_path = "riesz_pyramid_visualization.mp4"
-    write_frames_to_video(output_frames, output_path)
-    print(f"Visualization video saved to {output_path}")
+    print(f"Visualization images saved for all frames and levels.")
 
 if __name__ == "__main__":
     main()
