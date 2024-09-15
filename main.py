@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from multiprocessing import Pool, cpu_count
 from numba import jit
-import numba.np as numba_np
+import numpy as np
 
 xp = np
 
@@ -28,9 +28,9 @@ def riesz_transform(image):
                 fx[i, j] = -1j * x[j] / r[i, j]
                 fy[i, j] = -1j * y[i] / r[i, j]
 
-    img_fft = numba_np.fft.fft2(image)
-    rx = np.real(numba_np.fft.ifft2(img_fft * fx))
-    ry = np.real(numba_np.fft.ifft2(img_fft * fy))
+    img_fft = np.fft.fft2(image)
+    rx = np.real(np.fft.ifft2(img_fft * fx))
+    ry = np.real(np.fft.ifft2(img_fft * fy))
 
     return rx, ry
 
