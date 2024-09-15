@@ -90,27 +90,24 @@ def write_frames_to_video(frames, output_path, fps=30):
 
 
 def visualize_riesz_pyramid(frame, riesz_pyr):
-    """Visualize the Riesz pyramid for a single frame and return the figure."""
-    levels = len(riesz_pyr)
-    fig, axes = plt.subplots(levels, 3, figsize=(15, 5*levels))
+    """Visualize levels 4 to 7 of the Riesz pyramid for a single frame and return the figure."""
+    levels_to_show = riesz_pyr[3:7]  # Levels 4 to 7 (index 3 to 6)
+    fig, axes = plt.subplots(4, 3, figsize=(15, 20))
     
-    axes[0, 0].imshow(frame, cmap='gray')
-    axes[0, 0].set_title('Original Frame')
-    axes[0, 0].axis('off')
-    
-    for i, (rx, ry) in enumerate(riesz_pyr):
+    for i, (rx, ry) in enumerate(levels_to_show):
         magnitude = np.sqrt(rx**2 + ry**2)
+        level = i + 4  # Actual level number
         
         axes[i, 0].imshow(rx, cmap='gray')
-        axes[i, 0].set_title(f'Level {i}: Rx')
+        axes[i, 0].set_title(f'Level {level}: Rx')
         axes[i, 0].axis('off')
         
         axes[i, 1].imshow(ry, cmap='gray')
-        axes[i, 1].set_title(f'Level {i}: Ry')
+        axes[i, 1].set_title(f'Level {level}: Ry')
         axes[i, 1].axis('off')
         
         axes[i, 2].imshow(magnitude, cmap='viridis')
-        axes[i, 2].set_title(f'Level {i}: Magnitude')
+        axes[i, 2].set_title(f'Level {level}: Magnitude')
         axes[i, 2].axis('off')
     
     plt.tight_layout()
@@ -131,7 +128,7 @@ def main():
     frames = load_frames_from_video(video_path, max_frames=None)  # Load all frames
 
     # Set the number of levels for the pyramid
-    levels = 4
+    levels = 7
 
     print(f"Loaded {len(frames)} frames from the video.")
 
