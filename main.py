@@ -91,7 +91,8 @@ def write_frames_to_video(frames, output_path, fps=30):
 
 
 def visualize_riesz_pyramid(frame, riesz_pyr, frame_number):
-    """Visualize all levels of the Riesz pyramid for a single frame and save each level."""
+    """Visualize all levels of the Riesz pyramid for a single frame and return the visualizations."""
+    visualizations = []
     for i, (rx, ry) in enumerate(riesz_pyr):
         magnitude = np.sqrt(rx**2 + ry**2)
         
@@ -111,16 +112,23 @@ def visualize_riesz_pyramid(frame, riesz_pyr, frame_number):
         
         plt.tight_layout()
         
-        # Save the figure
-        plt.savefig(f'frame_{frame_number}_level_{i+1}.png')
+        # Convert the figure to an image
+        canvas = FigureCanvasAgg(fig)
+        canvas.draw()
+        img = np.frombuffer(canvas.tostring_rgb(), dtype='uint8')
+        img = img.reshape(canvas.get_width_height()[::-1] + (3,))
+        
+        visualizations.append(img)
         plt.close(fig)
+    
+    return visualizations
 
 
 def process_frame(args):
     frame, frame_number, levels = args
     riesz_pyr = riesz_pyramid(frame, levels)
-    visualize_riesz_pyramid(frame, riesz_pyr, frame_number)
-    return f"Frame {frame_number}: Riesz pyramid created and visualized with {levels} levels."
+    visualizations = visualize_riesz_pyramid(frame, riesz_pyr, frame_number)
+    return visualizations
 
 def main():
     # Load frames from a video file
@@ -140,10 +148,19 @@ def main():
     with Pool(processes=num_processes) as pool:
         results = pool.map(process_frame, args)
 
-    for result in results:
-        print(result)
+    # Reorganize results by level
+    level_frames = [[] for _ in range(levels)]
+    for frame_visualizations in results:
+        for level, visualization in enumerate(frame_visualizations):
+            level_frames[level].append(visualization)
 
-    print(f"Visualization images saved for all frames and levels.")
+    # Create a video for each level
+    for level, frames in enumerate(level_frames):
+        output_path = f'riesz_pyramid_level_{level+1}.mp4'
+        write_frames_to_video(frames, output_path)
+        print(f"Video created for level {level+1}: {output_path}")
+
+    print(f"Visualization videos created for all levels.")
 
 if __name__ == "__main__":
     main()
