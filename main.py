@@ -13,8 +13,9 @@ def riesz_transform(image):
     
     xx, yy = np.meshgrid(x, y)
     r = np.sqrt(xx**2 + yy**2)
-    fx = np.where(r != 0, -1j * xx / r, 0)
-    fy = np.where(r != 0, -1j * yy / r, 0)
+    epsilon = 1e-10  # Small value to avoid division by zero
+    fx = -1j * xx / (r + epsilon)
+    fy = -1j * yy / (r + epsilon)
 
     img_fft = np.fft.fft2(image)
     rx = np.real(np.fft.ifft2(img_fft * fx))
