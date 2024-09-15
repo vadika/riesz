@@ -3,6 +3,7 @@ from scipy import signal
 import cv2
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg
+from multiprocessing import Pool, cpu_count
 
 
 def riesz_transform(image):
@@ -115,6 +116,12 @@ def visualize_riesz_pyramid(frame, riesz_pyr, frame_number):
         plt.close(fig)
 
 
+def process_frame(args):
+    frame, frame_number, levels = args
+    riesz_pyr = riesz_pyramid(frame, levels)
+    visualize_riesz_pyramid(frame, riesz_pyr, frame_number)
+    return f"Frame {frame_number}: Riesz pyramid created and visualized with {levels} levels."
+
 def main():
     # Load frames from a video file
     video_path = "IMG_4101.MOV"  # Replace with your video file path
@@ -125,16 +132,16 @@ def main():
 
     print(f"Loaded {len(frames)} frames from the video.")
 
-    for i, frame in enumerate(frames):
-        # Compute the Riesz pyramid for each frame
-        riesz_pyr = riesz_pyramid(frame, levels)
+    # Prepare arguments for parallel processing
+    args = [(frame, i+1, levels) for i, frame in enumerate(frames)]
 
-        print(f"Frame {i + 1}: Riesz pyramid created with {levels} levels.")
-        for j, (rx, ry) in enumerate(riesz_pyr):
-            print(f"  Level {j + 1}: Rx shape = {rx.shape}, Ry shape = {ry.shape}")
+    # Use multiprocessing to process frames in parallel
+    num_processes = cpu_count()
+    with Pool(processes=num_processes) as pool:
+        results = pool.map(process_frame, args)
 
-        # Visualize the Riesz pyramid and save each level
-        visualize_riesz_pyramid(frame, riesz_pyr, i + 1)
+    for result in results:
+        print(result)
 
     print(f"Visualization images saved for all frames and levels.")
 
