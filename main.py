@@ -109,7 +109,7 @@ def visualize_riesz_pyramid(frame, riesz_pyr):
 # Example usage
 def main():
     # Load frames from a video file
-    video_path = "path/to/your/video.mp4"  # Replace with your video file path
+    video_path = "IMG_4101.MOV"  # Replace with your video file path
     frames = load_frames_from_video(video_path, max_frames=1)  # Load only 1 frame for demonstration
 
     # Set the number of levels for the pyramid
