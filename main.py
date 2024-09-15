@@ -4,15 +4,18 @@ import cv2
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from multiprocessing import Pool, cpu_count
+from numba import jit
 
 xp = np
 
 
+@jit(nopython=True)
 def riesz_transform(image):
     """Apply the Riesz transform to an image."""
     rows, cols = image.shape
-    x, y = np.meshgrid(np.arange(cols) / cols - 0.5,
-                       np.arange(rows) / rows - 0.5)
+    x = np.arange(cols) / cols - 0.5
+    y = np.arange(rows) / rows - 0.5
+    x, y = np.meshgrid(x, y)
     r = np.sqrt(x ** 2 + y ** 2)
 
     fx = -1j * x / (r + np.finfo(float).eps)
