@@ -89,60 +89,63 @@ def write_frames_to_video(frames, output_path, fps=30):
     out.release()
 
 
-def visualize_riesz_pyramid(frame, riesz_pyr, frame_number):
+def visualize_riesz_pyramid(frame, riesz_pyr, frame_number, amplification_factor=5):
     """Visualize all levels of the Riesz pyramid for a single frame and return the visualizations."""
     visualizations = []
     for i, (rx, ry) in enumerate(riesz_pyr):
         magnitude = np.sqrt(rx**2 + ry**2)
-            
-        # Normalize magnitude to [0, 1] range
-        magnitude_normalized = (magnitude - magnitude.min()) / (magnitude.max() - magnitude.min())
-            
+        
+        # Amplify the magnitude
+        magnitude_amplified = magnitude * amplification_factor
+        
+        # Normalize amplified magnitude to [0, 1] range
+        magnitude_normalized = (magnitude_amplified - magnitude_amplified.min()) / (magnitude_amplified.max() - magnitude_amplified.min())
+        
         # Resize magnitude_normalized to match frame size
         magnitude_resized = cv2.resize(magnitude_normalized, (frame.shape[1], frame.shape[0]))
-            
+        
         fig, axes = plt.subplots(2, 2, figsize=(12, 12))
-            
+        
         # Original frame
         axes[0, 0].imshow(frame, cmap='gray')
         axes[0, 0].set_title('Original Frame')
         axes[0, 0].axis('off')
-            
+        
         # Rx component
         axes[0, 1].imshow(rx, cmap='gray')
         axes[0, 1].set_title(f'Level {i+1}: Rx')
         axes[0, 1].axis('off')
-            
+        
         # Ry component
         axes[1, 0].imshow(ry, cmap='gray')
         axes[1, 0].set_title(f'Level {i+1}: Ry')
         axes[1, 0].axis('off')
-            
-        # Magnitude as alpha layer on original frame
+        
+        # Amplified magnitude as alpha layer on original frame
         frame_rgb = np.stack((frame,)*3, axis=-1)
         frame_rgba = np.dstack((frame_rgb, magnitude_resized * 255)).astype(np.uint8)
         axes[1, 1].imshow(frame_rgba)
-        axes[1, 1].set_title(f'Level {i+1}: Magnitude as Alpha')
+        axes[1, 1].set_title(f'Level {i+1}: Amplified Magnitude as Alpha')
         axes[1, 1].axis('off')
-            
+        
         plt.tight_layout()
-            
+        
         # Convert the figure to an image
         canvas = FigureCanvasAgg(fig)
         canvas.draw()
         img = np.frombuffer(canvas.tostring_rgb(), dtype='uint8')
         img = img.reshape(canvas.get_width_height()[::-1] + (3,))
-            
+        
         visualizations.append(img)
         plt.close(fig)
-        
+    
     return visualizations
 
 
 def process_frame(args):
-    frame, frame_number, levels = args
+    frame, frame_number, levels, amplification_factor = args
     riesz_pyr = riesz_pyramid(frame, levels)
-    visualizations = visualize_riesz_pyramid(frame, riesz_pyr, frame_number)
+    visualizations = visualize_riesz_pyramid(frame, riesz_pyr, frame_number, amplification_factor)
     return visualizations
 
 def main():
@@ -150,13 +153,14 @@ def main():
     video_path = "IMG_4101.MOV"  # Replace with your video file path
     frames = load_frames_from_video(video_path, max_frames=None)  # Load all frames
 
-    # Set the number of levels for the pyramid
+    # Set the number of levels for the pyramid and amplification factor
     levels = 7
+    amplification_factor = 5  # Adjust this value to increase or decrease motion amplification
 
     print(f"Loaded {len(frames)} frames from the video.")
 
     # Prepare arguments for parallel processing
-    args = [(frame, i+1, levels) for i, frame in enumerate(frames)]
+    args = [(frame, i+1, levels, amplification_factor) for i, frame in enumerate(frames)]
 
     # Use multiprocessing to process frames in parallel
     num_processes = cpu_count()
@@ -171,11 +175,11 @@ def main():
 
     # Create a video for each level
     for level, frames in enumerate(level_frames):
-        output_path = f'riesz_pyramid_level_{level+1}.mp4'
+        output_path = f'riesz_pyramid_level_{level+1}_amplified.mp4'
         write_frames_to_video(frames, output_path)
         print(f"Video created for level {level+1}: {output_path}")
 
-    print(f"Visualization videos created for all levels.")
+    print(f"Amplified visualization videos created for all levels.")
 
 if __name__ == "__main__":
     main()
