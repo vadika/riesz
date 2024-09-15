@@ -1,5 +1,6 @@
 import numpy as np
 from scipy import signal
+import cv2
 
 
 def riesz_transform(image):
@@ -57,20 +58,44 @@ def riesz_pyramid(image, levels):
     return riesz_pyr
 
 
+def load_frames_from_video(video_path, max_frames=None):
+    """Load frames from a video file."""
+    cap = cv2.VideoCapture(video_path)
+    frames = []
+    count = 0
+    
+    while True:
+        ret, frame = cap.read()
+        if not ret or (max_frames is not None and count >= max_frames):
+            break
+        gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        frames.append(gray_frame)
+        count += 1
+    
+    cap.release()
+    return frames
+
+
 # Example usage
 def main():
-    # Create a sample image (you can replace this with your own image)
-    image = np.random.rand(256, 256)
+    # Load frames from a video file
+    video_path = "path/to/your/video.mp4"  # Replace with your video file path
+    frames = load_frames_from_video(video_path, max_frames=10)  # Load up to 10 frames
 
     # Set the number of levels for the pyramid
     levels = 4
 
-    # Compute the Riesz pyramid
-    riesz_pyr = riesz_pyramid(image, levels)
+    print(f"Loaded {len(frames)} frames from the video.")
 
-    print(f"Riesz pyramid created with {levels} levels.")
-    for i, (rx, ry) in enumerate(riesz_pyr):
-        print(f"Level {i}: Rx shape = {rx.shape}, Ry shape = {ry.shape}")
+    for i, frame in enumerate(frames):
+        # Compute the Riesz pyramid for each frame
+        riesz_pyr = riesz_pyramid(frame, levels)
+
+        print(f"Frame {i + 1}: Riesz pyramid created with {levels} levels.")
+        for j, (rx, ry) in enumerate(riesz_pyr):
+            print(f"  Level {j}: Rx shape = {rx.shape}, Ry shape = {ry.shape}")
+
+        # Here you can add more processing or visualization of the Riesz pyramid if needed
 
 
 if __name__ == "__main__":
