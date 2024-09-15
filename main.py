@@ -4,29 +4,21 @@ import cv2
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from multiprocessing import Pool, cpu_count
-from numba import jit
 
-xp = np
-
-
-from numba import jit
-import numpy as np
-from numpy import fft
-
-@jit(nopython=True)
 def riesz_transform(image):
     """Apply the Riesz transform to an image."""
     rows, cols = image.shape
-    x = np.arange(cols) / cols - 0.5
-    y = np.arange(rows) / rows - 0.5
+    x = np.fft.fftfreq(cols)
+    y = np.fft.fftfreq(rows)
     
-    r = np.sqrt(x[np.newaxis, :]**2 + y[:, np.newaxis]**2)
-    fx = np.where(r != 0, -1j * x[np.newaxis, :] / r, 0)
-    fy = np.where(r != 0, -1j * y[:, np.newaxis] / r, 0)
+    xx, yy = np.meshgrid(x, y)
+    r = np.sqrt(xx**2 + yy**2)
+    fx = np.where(r != 0, -1j * xx / r, 0)
+    fy = np.where(r != 0, -1j * yy / r, 0)
 
-    img_fft = fft.fft2(image)
-    rx = np.real(fft.ifft2(img_fft * fx))
-    ry = np.real(fft.ifft2(img_fft * fy))
+    img_fft = np.fft.fft2(image)
+    rx = np.real(np.fft.ifft2(img_fft * fx))
+    ry = np.real(np.fft.ifft2(img_fft * fy))
 
     return rx, ry
 
