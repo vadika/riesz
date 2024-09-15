@@ -95,22 +95,31 @@ def visualize_riesz_pyramid(frame, riesz_pyr, frame_number):
     for i, (rx, ry) in enumerate(riesz_pyr):
         magnitude = np.sqrt(rx**2 + ry**2)
         
+        # Normalize magnitude to [0, 1] range
+        magnitude_normalized = (magnitude - magnitude.min()) / (magnitude.max() - magnitude.min())
+        
         fig, axes = plt.subplots(2, 2, figsize=(12, 12))
         
+        # Original frame
         axes[0, 0].imshow(frame, cmap='gray')
         axes[0, 0].set_title('Original Frame')
         axes[0, 0].axis('off')
         
+        # Rx component
         axes[0, 1].imshow(rx, cmap='gray')
         axes[0, 1].set_title(f'Level {i+1}: Rx')
         axes[0, 1].axis('off')
         
+        # Ry component
         axes[1, 0].imshow(ry, cmap='gray')
         axes[1, 0].set_title(f'Level {i+1}: Ry')
         axes[1, 0].axis('off')
         
-        axes[1, 1].imshow(magnitude, cmap='viridis')
-        axes[1, 1].set_title(f'Level {i+1}: Magnitude')
+        # Magnitude as alpha layer on original frame
+        frame_rgb = np.stack((frame,)*3, axis=-1)
+        frame_rgba = np.dstack((frame_rgb, magnitude_normalized * 255)).astype(np.uint8)
+        axes[1, 1].imshow(frame_rgba)
+        axes[1, 1].set_title(f'Level {i+1}: Magnitude as Alpha')
         axes[1, 1].axis('off')
         
         plt.tight_layout()
