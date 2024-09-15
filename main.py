@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from multiprocessing import Pool, cpu_count
 from numba import jit
-import numba.numpy_support as numba_np
+import numba.np as numba_np
 
 xp = np
 
