@@ -155,7 +155,7 @@ def main():
 
     # Set the number of levels for the pyramid and amplification factor
     levels = 7
-    amplification_factor = 5  # Adjust this value to increase or decrease motion amplification
+    amplification_factor = 10  # Adjust this value to increase or decrease motion amplification
 
     print(f"Loaded {len(frames)} frames from the video.")
 
