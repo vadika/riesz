@@ -93,7 +93,11 @@ def visualize_riesz_pyramid(frame, riesz_pyr, frame_number, amplification_factor
     """Visualize all levels of the Riesz pyramid for a single frame and return the visualizations."""
     visualizations = []
     for i, (rx, ry) in enumerate(riesz_pyr):
-        magnitude = np.sqrt(rx**2 + ry**2)
+        # Resize rx and ry to match frame size
+        rx_resized = cv2.resize(rx, (frame.shape[1], frame.shape[0]))
+        ry_resized = cv2.resize(ry, (frame.shape[1], frame.shape[0]))
+        
+        magnitude = np.sqrt(rx_resized**2 + ry_resized**2)
         
         # Amplify the magnitude
         magnitude_amplified = magnitude * amplification_factor
@@ -101,18 +105,15 @@ def visualize_riesz_pyramid(frame, riesz_pyr, frame_number, amplification_factor
         # Normalize amplified magnitude to [0, 1] range
         magnitude_normalized = (magnitude_amplified - magnitude_amplified.min()) / (magnitude_amplified.max() - magnitude_amplified.min())
         
-        # Resize magnitude_normalized to match frame size
-        magnitude_resized = cv2.resize(magnitude_normalized, (frame.shape[1], frame.shape[0]))
-        
         # Create displacement map
-        displacement_x = magnitude_resized * np.cos(np.angle(rx + 1j*ry))
-        displacement_y = magnitude_resized * np.sin(np.angle(rx + 1j*ry))
+        displacement_x = magnitude_normalized * np.cos(np.angle(rx_resized + 1j*ry_resized))
+        displacement_y = magnitude_normalized * np.sin(np.angle(rx_resized + 1j*ry_resized))
         
         # Apply displacement to create moved image
         rows, cols = frame.shape
         row_indices, col_indices = np.meshgrid(np.arange(rows), np.arange(cols), indexing='ij')
-        moved_row_indices = np.clip(row_indices + displacement_y, 0, rows - 1).astype(int)
-        moved_col_indices = np.clip(col_indices + displacement_x, 0, cols - 1).astype(int)
+        moved_row_indices = np.clip(row_indices + displacement_y * rows, 0, rows - 1).astype(int)
+        moved_col_indices = np.clip(col_indices + displacement_x * cols, 0, cols - 1).astype(int)
         moved_image = frame[moved_row_indices, moved_col_indices]
         
         fig, axes = plt.subplots(2, 2, figsize=(12, 12))
