@@ -133,8 +133,8 @@ def visualize_riesz_pyramid(frame, riesz_pyr, frame_number, amplification_factor
         # Convert the figure to an image
         canvas = FigureCanvasAgg(fig)
         canvas.draw()
-        img = np.frombuffer(canvas.tostring_rgb(), dtype='uint8')
-        img = img.reshape(canvas.get_width_height()[::-1] + (3,))
+        img = np.frombuffer(canvas.buffer_rgba(), dtype='uint8')
+        img = img.reshape(canvas.get_width_height()[::-1] + (4,))[:,:,:3]  # RGBA to RGB
         
         visualizations.append(img)
         plt.close(fig)
