@@ -1,3 +1,4 @@
 .aider*
 *.MOV
 *.mp4
+.venv
