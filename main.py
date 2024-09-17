@@ -104,6 +104,17 @@ def visualize_riesz_pyramid(frame, riesz_pyr, frame_number, amplification_factor
         # Resize magnitude_normalized to match frame size
         magnitude_resized = cv2.resize(magnitude_normalized, (frame.shape[1], frame.shape[0]))
         
+        # Create displacement map
+        displacement_x = magnitude_resized * np.cos(np.angle(rx + 1j*ry))
+        displacement_y = magnitude_resized * np.sin(np.angle(rx + 1j*ry))
+        
+        # Apply displacement to create moved image
+        rows, cols = frame.shape
+        row_indices, col_indices = np.meshgrid(np.arange(rows), np.arange(cols), indexing='ij')
+        moved_row_indices = np.clip(row_indices + displacement_y, 0, rows - 1).astype(int)
+        moved_col_indices = np.clip(col_indices + displacement_x, 0, cols - 1).astype(int)
+        moved_image = frame[moved_row_indices, moved_col_indices]
+        
         fig, axes = plt.subplots(2, 2, figsize=(12, 12))
         
         # Original frame
@@ -121,11 +132,9 @@ def visualize_riesz_pyramid(frame, riesz_pyr, frame_number, amplification_factor
         axes[1, 0].set_title(f'Level {i+1}: Ry')
         axes[1, 0].axis('off')
         
-        # Amplified magnitude as alpha layer on original frame
-        frame_rgb = np.stack((frame,)*3, axis=-1)
-        frame_rgba = np.dstack((frame_rgb, magnitude_resized * 255)).astype(np.uint8)
-        axes[1, 1].imshow(frame_rgba)
-        axes[1, 1].set_title(f'Level {i+1}: Amplified Magnitude as Alpha')
+        # Moved image
+        axes[1, 1].imshow(moved_image, cmap='gray')
+        axes[1, 1].set_title(f'Level {i+1}: Moved Image')
         axes[1, 1].axis('off')
         
         plt.tight_layout()
